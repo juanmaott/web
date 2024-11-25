@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Live Player</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    video {
+      width: 80%;
+      height: auto;
+      border: 2px solid #333;
+      border-radius: 10px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <h1>TV Live Player</h1>
+  <video id="video" controls autoplay muted></video>
+  <p id="status">Cargando...</p>
+
+  <!-- Incluir la librería HLS.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    // URL del archivo manifest.mpd
+    const manifestURL = "https://edge6202.telecentro.net.ar/bpk-token/2ae@sntzbuqenghqsgqreetccgtdizo1moafszmnxjda/GlobalManifest.mpd";
+
+    // Seleccionar el elemento de video
+    const video = document.getElementById('video');
+    const status = document.getElementById('status');
+
+    if (Hls.isSupported()) {
+      // Crear instancia de HLS.js
+      const hls = new Hls();
+
+      // Manejar errores de reproducción
+      hls.on(Hls.Events.ERROR, function (event, data) {
+        if (data.fatal) {
+          status.textContent = "Error: No se pudo cargar el stream.";
+        }
+      });
+
+      // Cargar el manifest y conectar al video
+      hls.loadSource(manifestURL);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        status.textContent = "Reproduciendo.";
+        video.play();
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Soporte nativo en Safari
+      video.src = manifestURL;
+      video.addEventListener('loadedmetadata', function () {
+        status.textContent = "Reproduciendo.";
+        video.play();
+      });
+    } else {
+      status.textContent = "Tu navegador no soporta reproducción HLS.";
+    }
+  </script>
+</body>
+</html>
+

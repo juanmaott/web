@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TV Live with DRM</title>
+  <title>Video.js Widevine DRM Player</title>
+
+  <!-- Incluir el CSS de Video.js -->
+  <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,7 +15,7 @@
       margin: 0;
       padding: 20px;
     }
-    video {
+    .video-js {
       width: 80%;
       height: auto;
       border: 2px solid #333;
@@ -22,62 +25,47 @@
   </style>
 </head>
 <body>
-  <h1>TV Live with Widevine DRM</h1>
-  <video id="video" controls autoplay muted></video>
+  <h1>Video.js Widevine DRM Player</h1>
+  <video id="video" class="video-js vjs-default-skin" controls autoplay muted></video>
   <p id="status">Cargando...</p>
 
-  <!-- Incluir la librería Shaka Player -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+  <!-- Incluir Video.js y el plugin contrib-eme -->
+  <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-eme@3.5.4/dist/videojs-contrib-eme.min.js"></script>
   <script>
-    // URL del manifest DASH
-    const manifestUri = "https://edge1052.telecentro.net.ar/bpk-token/2ab@qwxcclut4kimbigutw2gupfewiu3vqycq2j3ugda/GlobalManifest.mpd";
-
-    // URL del servidor de licencias Widevine
+    // Configuración del manifiesto DASH y servidor Widevine
+    const manifestUri = "https://edge6202.telecentro.net.ar/bpk-token/2ae@sntzbuqenghqsgqreetccgtdizo1moafszmnxjda/GlobalManifest.mpd";
     const licenseServerUrl = "https://wv-bev.telecentro.net.ar/?deviceId=YW5fMTY2OTU0MTU=";
 
-    // Seleccionar el video y el estado
-    const video = document.getElementById('video');
-    const status = document.getElementById('status');
+    // Inicializar el reproductor Video.js
+    const player = videojs('video', {
+      autoplay: true,
+      controls: true,
+      muted: true,
+      preload: 'auto',
+      techOrder: ['html5']
+    });
 
-    // Inicializar Shaka Player
-    async function initApp() {
-      // Verificar compatibilidad del navegador
-      if (!shaka.Player.isBrowserSupported()) {
-        status.textContent = "Tu navegador no soporta Shaka Player.";
-        return;
-      }
-
-      // Crear instancia del reproductor
-      const player = new shaka.Player(video);
-
-      // Configurar Widevine
-      player.configure({
-        drm: {
-          servers: {
-            'com.widevine.alpha': licenseServerUrl
-          }
+    // Configuración de Widevine DRM
+    player.ready(function () {
+      player.src({
+        src: manifestUri,
+        type: 'application/dash+xml',
+        keySystems: {
+          'com.widevine.alpha': licenseServerUrl
         }
       });
 
-      // Manejar errores
-      player.addEventListener('error', onError);
+      player.on('error', function () {
+        const error = player.error();
+        document.getElementById('status').textContent = `Error: ${error ? error.message : 'Error desconocido.'}`;
+        console.error('Error en Video.js:', error);
+      });
 
-      try {
-        // Cargar el contenido
-        await player.load(manifestUri);
-        status.textContent = "Reproduciendo.";
-      } catch (error) {
-        onError(error);
-      }
-    }
-
-    function onError(error) {
-      console.error("Error en el reproductor:", error);
-      status.textContent = "Error al cargar el contenido.";
-    }
-
-    // Inicializar la aplicación
-    document.addEventListener('DOMContentLoaded', initApp);
+      player.on('loadedmetadata', function () {
+        document.getElementById('status').textContent = "Reproduciendo.";
+      });
+    });
   </script>
 </body>
 </html>

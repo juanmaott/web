@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TV Live Player</title>
+  <title>TV Live with DRM</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,49 +22,62 @@
   </style>
 </head>
 <body>
-  <h1>TV Live Player</h1>
+  <h1>TV Live with Widevine DRM</h1>
   <video id="video" controls autoplay muted></video>
   <p id="status">Cargando...</p>
 
-  <!-- Incluir la librería HLS.js -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <!-- Incluir la librería Shaka Player -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
   <script>
-    // URL del archivo manifest.mpd
-    const manifestURL = "https://edge6202.telecentro.net.ar/bpk-token/2ae@sdo5mc4jy3tjydsobbyd424ze24q1htqsxrl05ba/GlobalManifest.mpd";
+    // URL del manifest DASH
+    const manifestUri = "https://edge1052.telecentro.net.ar/bpk-token/2ab@qwxcclut4kimbigutw2gupfewiu3vqycq2j3ugda/GlobalManifest.mpd";
 
-    // Seleccionar el elemento de video
+    // URL del servidor de licencias Widevine
+    const licenseServerUrl = "https://wv-bev.telecentro.net.ar/?deviceId=YW5fMTY2OTU0MTU=";
+
+    // Seleccionar el video y el estado
     const video = document.getElementById('video');
     const status = document.getElementById('status');
 
-    if (Hls.isSupported()) {
-      // Crear instancia de HLS.js
-      const hls = new Hls();
+    // Inicializar Shaka Player
+    async function initApp() {
+      // Verificar compatibilidad del navegador
+      if (!shaka.Player.isBrowserSupported()) {
+        status.textContent = "Tu navegador no soporta Shaka Player.";
+        return;
+      }
 
-      // Manejar errores de reproducción
-      hls.on(Hls.Events.ERROR, function (event, data) {
-        if (data.fatal) {
-          status.textContent = "Error: No se pudo cargar el stream.";
+      // Crear instancia del reproductor
+      const player = new shaka.Player(video);
+
+      // Configurar Widevine
+      player.configure({
+        drm: {
+          servers: {
+            'com.widevine.alpha': licenseServerUrl
+          }
         }
       });
 
-      // Cargar el manifest y conectar al video
-      hls.loadSource(manifestURL);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+      // Manejar errores
+      player.addEventListener('error', onError);
+
+      try {
+        // Cargar el contenido
+        await player.load(manifestUri);
         status.textContent = "Reproduciendo.";
-        video.play();
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Soporte nativo en Safari
-      video.src = manifestURL;
-      video.addEventListener('loadedmetadata', function () {
-        status.textContent = "Reproduciendo.";
-        video.play();
-      });
-    } else {
-      status.textContent = "Tu navegador no soporta reproducción HLS.";
+      } catch (error) {
+        onError(error);
+      }
     }
+
+    function onError(error) {
+      console.error("Error en el reproductor:", error);
+      status.textContent = "Error al cargar el contenido.";
+    }
+
+    // Inicializar la aplicación
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
-

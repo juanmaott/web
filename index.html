@@ -38,12 +38,13 @@
     const player = dashjs.MediaPlayer().create();
     player.initialize(document.getElementById('videoPlayer'), manifestUri, true);
 
-    // Configurar DRM Widevine
+    // Configurar DRM Widevine con user-agent simulado
     player.setProtectionData({
       "com.widevine.alpha": {
         "serverURL": licenseServerUrl,
         "httpRequestHeaders": {
-          "Content-Type": "application/octet-stream" // Asegurar que la solicitud de licencia sea válida
+          "Content-Type": "application/octet-stream",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
         }
       }
     });

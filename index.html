@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video.js Widevine DRM Player</title>
-
-  <!-- Incluir el CSS de Video.js -->
-  <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet">
+  <title>DASH.js Widevine DRM</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,7 +12,7 @@
       margin: 0;
       padding: 20px;
     }
-    .video-js {
+    video {
       width: 80%;
       height: auto;
       border: 2px solid #333;
@@ -25,46 +22,36 @@
   </style>
 </head>
 <body>
-  <h1>Video.js Widevine DRM Player</h1>
-  <video id="video" class="video-js vjs-default-skin" controls autoplay muted></video>
+  <h1>DASH.js Widevine DRM Player</h1>
+  <video id="videoPlayer" controls autoplay muted></video>
   <p id="status">Cargando...</p>
 
-  <!-- Incluir Video.js y el plugin contrib-eme -->
-  <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-eme@3.5.4/dist/videojs-contrib-eme.min.js"></script>
+  <!-- Incluir la librería DASH.js -->
+  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
   <script>
-    // Configuración del manifiesto DASH y servidor Widevine
-    const manifestUri = "https://edge1052.telecentro.net.ar/bpk-token/2ab@qwxcclut4kimbigutw2gupfewiu3vqycq2j3ugda/GlobalManifest.mpd";
+    // URL del manifiesto DASH y servidor de licencias Widevine
+    const manifestUri = "https://edge6202.telecentro.net.ar/bpk-token/2ae@sntzbuqenghqsgqreetccgtdizo1moafszmnxjda/GlobalManifest.mpd";
     const licenseServerUrl = "https://wv-bev.telecentro.net.ar/?deviceId=YW5fMTY2OTU0MTU=";
 
-    // Inicializar el reproductor Video.js
-    const player = videojs('video', {
-      autoplay: true,
-      controls: true,
-      muted: true,
-      preload: 'auto',
-      techOrder: ['html5']
+    // Inicializar el reproductor DASH.js
+    const player = dashjs.MediaPlayer().create();
+    player.initialize(document.getElementById('videoPlayer'), manifestUri, true);
+
+    // Configuración de DRM (Widevine)
+    player.setProtectionData({
+      "com.widevine.alpha": {
+        "serverURL": licenseServerUrl
+      }
     });
 
-    // Configuración de Widevine DRM
-    player.ready(function () {
-      player.src({
-        src: manifestUri,
-        type: 'application/dash+xml',
-        keySystems: {
-          'com.widevine.alpha': licenseServerUrl
-        }
-      });
+    // Manejo de eventos
+    player.on(dashjs.MediaPlayer.events.ERROR, (e) => {
+      console.error("Error en el reproductor:", e);
+      document.getElementById('status').textContent = "Error al cargar el contenido.";
+    });
 
-      player.on('error', function () {
-        const error = player.error();
-        document.getElementById('status').textContent = `Error: ${error ? error.message : 'Error desconocido.'}`;
-        console.error('Error en Video.js:', error);
-      });
-
-      player.on('loadedmetadata', function () {
-        document.getElementById('status').textContent = "Reproduciendo.";
-      });
+    player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, () => {
+      document.getElementById('status').textContent = "Reproduciendo.";
     });
   </script>
 </body>

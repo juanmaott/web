@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Widevine DASH Player</title>
+  <title>Widevine DASH.js Player</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,33 +23,45 @@
   </style>
 </head>
 <body>
-  <h1>Widevine DASH Player</h1>
+  <h1>Widevine DASH.js Player</h1>
   <video id="videoPlayer" controls autoplay muted></video>
   <p id="status">Cargando...</p>
 
   <!-- DASH.js -->
   <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
   <script>
-    // URL del manifiesto y servidor de licencias
     const manifestUri = "https://edge1052.telecentro.net.ar/bpk-token/2ab@qwxcclut4kimbigutw2gupfewiu3vqycq2j3ugda/GlobalManifest.mpd";
     const licenseServerUrl = "https://wv-bev.telecentro.net.ar/?deviceId=YW5fMTY2OTU0MTU=";
 
-    // Inicializar reproductor DASH.js
     const player = dashjs.MediaPlayer().create();
     player.initialize(document.getElementById('videoPlayer'), manifestUri, true);
 
-    // Configurar DRM Widevine con user-agent simulado
+    player.updateSettings({
+      streaming: {
+        lowLatencyEnabled: true,
+        liveCatchUpMode: "liveCatchUpPlaybackRate",
+        abr: {
+          autoSwitchBitrate: {
+            audio: true,
+            video: true
+          }
+        }
+      }
+    });
+
     player.setProtectionData({
       "com.widevine.alpha": {
         "serverURL": licenseServerUrl,
         "httpRequestHeaders": {
           "Content-Type": "application/octet-stream",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
-        }
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+          "Origin": "https://tu-dominio-gratis.com",
+          "Referer": "https://tu-dominio-gratis.com",
+        },
+        "robustnessLevel": "SW_SECURE_CRYPTO"
       }
     });
 
-    // Manejo de eventos
     player.on(dashjs.MediaPlayer.events.ERROR, (e) => {
       console.error("Error en el reproductor:", e);
       document.getElementById('status').textContent = "Error al cargar el contenido.";

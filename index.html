@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DASH.js Widevine DRM Player</title>
+  <title>Widevine DASH Player</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,30 +23,28 @@
   </style>
 </head>
 <body>
-  <h1>DASH.js Widevine DRM Player</h1>
+  <h1>Widevine DASH Player</h1>
   <video id="videoPlayer" controls autoplay muted></video>
   <p id="status">Cargando...</p>
 
-  <!-- Incluir la librería DASH.js -->
+  <!-- DASH.js -->
   <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
   <script>
-    // URL del manifiesto DASH y servidor de licencias Widevine
-    const manifestUri = "https://edge1052.telecentro.net.ar/bpk-token/2ab@qwxcclut4kimbigutw2gupfewiu3vqycq2j3ugda/GlobalManifest.mpd";
+    // URL del manifiesto y servidor de licencias
+    const manifestUri = "https://edge6202.telecentro.net.ar/bpk-token/2ae@sntzbuqenghqsgqreetccgtdizo1moafszmnxjda/GlobalManifest.mpd";
     const licenseServerUrl = "https://wv-bev.telecentro.net.ar/?deviceId=YW5fMTY2OTU0MTU=";
 
-    // Inicializar el reproductor DASH.js
+    // Inicializar reproductor DASH.js
     const player = dashjs.MediaPlayer().create();
-    player.updateSettings({
-      debug: {
-        logLevel: dashjs.Debug.LOG_LEVEL_NONE // Cambia a LOG_LEVEL_DEBUG para más detalles
-      }
-    });
     player.initialize(document.getElementById('videoPlayer'), manifestUri, true);
 
-    // Configuración de DRM (Widevine)
+    // Configurar DRM Widevine
     player.setProtectionData({
       "com.widevine.alpha": {
-        "serverURL": licenseServerUrl
+        "serverURL": licenseServerUrl,
+        "httpRequestHeaders": {
+          "Content-Type": "application/octet-stream" // Asegurar que la solicitud de licencia sea válida
+        }
       }
     });
 
@@ -58,6 +56,10 @@
 
     player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, () => {
       document.getElementById('status').textContent = "Reproduciendo.";
+    });
+
+    player.on(dashjs.MediaPlayer.events.LICENSE_REQUEST_COMPLETE, () => {
+      console.log("Licencia adquirida correctamente.");
     });
   </script>
 </body>
